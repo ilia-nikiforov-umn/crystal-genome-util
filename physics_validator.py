@@ -4,7 +4,6 @@ Python functions for validating binding-energy-crystal and crystal-structure-npt
 from typing import Any, Callable, Dict, List, Optional, Set
 from curses.ascii import isdigit
 from .aflow_util import AFLOW, get_stoich_reduced_list_from_prototype
-from .property_util import ENERGY_PROPERTY_ID, STRUCTURE_PROPERTY_ID
 import kim_edn
 import subprocess
 
@@ -183,20 +182,21 @@ def validate_common_fields(property_inst: Dict):
     if "library-prototype-label" in property_inst:
         aflow.write_poscar(property_inst["library-prototype-label"]["source-value"])
                     
-def validate_binding_energy_crystal(property_instances: str):
+def validate_binding_energy_crystal(property_instances: str, energy_property_id: str):
     """
     Validate "binding-energy-crystal" property
 
     Args:
         property_instances: Serialized kim-edn property instances object
+        energy_property_id: name of the property
     Raises:
         RuntimeError: When validation fails
     """
     property_instances_list = kim_edn.loads(property_instances)
-    if not any(property_instance["property-id"]==ENERGY_PROPERTY_ID for property_instance in property_instances_list):
-        raise RuntimeError("Could not find any instances of property %s in the indicated results file" %ENERGY_PROPERTY_ID)
+    if not any(property_instance["property-id"]==energy_property_id for property_instance in property_instances_list):
+        raise RuntimeError("Could not find any instances of property %s in the indicated results file" %energy_property_id)
     for property_instance in property_instances_list:
-        if property_instance["property-id"]==ENERGY_PROPERTY_ID:
+        if property_instance["property-id"]==energy_property_id:
             validate_common_fields(property_instance)
             energy_per_atom_ev = convert_units(
                 property_instance["binding-potential-energy-per-atom"]["source-value"],
@@ -215,20 +215,21 @@ def validate_binding_energy_crystal(property_instances: str):
                     (energy_per_atom_ev,num_atoms_per_formula,energy_per_formula_ev,EV_ENERGY_EPSILON)
                     )
         
-def validate_crystal_structure_npt(property_instances: str):
+def validate_crystal_structure_npt(property_instances: str, structure_property_id: str):
     """
     Validate "crystal-structure-npt" property
 
     Args:
         property_instances: Serialized kim-edn property instances object
+        structure_property_id: name of the structure property
     Raises:
-        RuntimeError: When validation fails
+        RuntimeError: When validation fails        
     """
     property_instances_list = kim_edn.loads(property_instances)
-    if not any(property_instance["property-id"]==STRUCTURE_PROPERTY_ID for property_instance in property_instances_list):
-        raise RuntimeError("Could not find any instances of property %s in the indicated results file" %STRUCTURE_PROPERTY_ID)
+    if not any(property_instance["property-id"]==structure_property_id for property_instance in property_instances_list):
+        raise RuntimeError("Could not find any instances of property %s in the indicated results file" %structure_property_id)
     for property_instance in property_instances_list:
-        if property_instance["property-id"]==STRUCTURE_PROPERTY_ID:
+        if property_instance["property-id"]==structure_property_id:
             validate_common_fields(property_instance)
             # GNU Units will crash if the absolute temperature is negative
             convert_units(property_instance["temperature"]["source-value"],property_instance["temperature"]["source-unit"],"K")

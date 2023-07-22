@@ -6,7 +6,10 @@ from kim_property import kim_property_create, kim_property_modify
 from typing import Dict, List, Union
 import numpy as np
 import kim_edn
-from .aflow_util import get_stoich_reduced_list_from_prototype
+from .aflow_util import get_stoich_reduced_list_from_prototype, AFLOW, read_shortnames
+from .physics_validator import validate_binding_energy_crystal, validate_crystal_structure_npt
+import os
+from kim_property import kim_property_dump
 
 ENERGY_PROPERTY_ID = "tag:staff@noreply.openkim.org,2023-02-21:property/binding-energy-crystal"
 STRUCTURE_PROPERTY_ID = "tag:staff@noreply.openkim.org,2023-02-21:property/crystal-structure-npt"
@@ -182,3 +185,74 @@ def add_property_inst(
             )                            
     
     return property_instances
+
+def find_unique_materials_and_write_properties(compare_dir: str, prototype_label: str, energy_per_atom: List[float], species):
+    """
+    Given a directory of relaxed structures, find unique ones and write their properties.
+
+    1) Use :func:`util.aflow_util.AFLOW.compare_materials_dir` to identify groups of duplicates among relaxed structures
+    2) For each group of duplicates:
+        a) Loop over the inidividual files, try to add a property instance until one is successfully added:
+            i) Use :func:`.aflow_util.AFLOW.get_prototype` to check that the prototype label didn't change
+            ii) Get the library prototype and shortname using :func:`.aflow_util.AFLOW.get_library_prototype_label_and_shortname`
+            iii) Try to add the properties using :func:`add_property_inst`
+            iv) Validate the properties using :func:`.physics_validator.validate_binding_energy_crystal` and :func:`.physics_validator.validate_crystal_structure_npt`
+    3) If at least one property instance was added, write the ``output/results.edn`` file
+
+    Args:
+        compare_dir:
+            Directory of structures to compare. This should contain filenames that are just integers corresponding to indices
+        prototype_label:
+            Prototype label of structures. This must be unchanged for property to write.
+        energy_per_atom:
+            List of relaxed energies per atom corresponding to the relaxed structures
+        species:
+            Chemical species
+            
+    """
+    aflow = AFLOW()
+    shortnames = read_shortnames()
+
+    # compare relaxed structures for duplicates
+    comparison=aflow.compare_materials_dir(compare_dir)
+
+    # Try to write at most one property per group of duplicates
+    property_inst = None
+    for materials_group in comparison:
+        # get all "indices" belonging to this group, i.e. numerical filenames
+        indices = [int(materials_group['structure_representative']['name'].split('/')[-1])]
+        for structure in materials_group['structures_duplicate']:
+            indices.append(int(structure['name'].split('/')[-1]))
+        print ("Parameter sets %s relaxed to duplicate structures, attempting to write only one of them."%str(indices))
+
+        # loop over all materials in this group until we find one that successfully adds a property instance
+        for i in indices:
+            relax_poscar_path=os.path.join(compare_dir,str(i))
+            relax_proto_des=aflow.get_prototype(relax_poscar_path)
+            relax_proto_label=relax_proto_des['aflow_prototype_label']
+            if relax_proto_label != prototype_label:
+                print("Prototype label changed during relaxation: test template prototype is %s, while relaxed is %s. Skipping parameter set %d."
+                %(prototype_label,relax_proto_label,i))
+                if i==indices[-1]:
+                    print("No parameter sets in this group successfully added a property instance. Skipping this group.")
+                continue
+            (libproto,shortname)=aflow.get_library_prototype_label_and_shortname(relax_poscar_path,shortnames)
+            # Try to add property instances. Back up original so we can keep going even if one parameter set fails
+            property_inst_new = property_inst # these are just serialized edn strings, so no need for deepcopy or anything
+            try:
+                property_inst_new = add_property_inst(energy_per_atom[i],species,relax_proto_des,libproto,shortname,property_inst_new)
+                validate_crystal_structure_npt(property_inst_new,STRUCTURE_PROPERTY_ID)
+                validate_binding_energy_crystal(property_inst_new,ENERGY_PROPERTY_ID)
+                property_inst = property_inst_new
+                print("Successfully added property instance for parameter set %d"%i)
+                break
+            except Exception as e:
+                print("Skipping parameter set %d because of error while adding or validating property:\n %s"%(i,e))
+                if i==indices[-1]:
+                    print("No parameter sets in this group successfully added a property instance. Skipping this group.")
+            
+    # Dump the results in a file
+    if not (property_inst is None or \
+            property_inst in ('None', '', '[]')):
+        with open("output/results.edn", "w") as fp:
+            kim_property_dump(property_inst, fp)
