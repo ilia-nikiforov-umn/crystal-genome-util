@@ -333,15 +333,11 @@ class AFLOW:
         Returns:
             JSON list of dictionaries containing information about matching prototypes. In practice, this list should be of length zero or 1
         """
-        command = " --compare2prototypes"
-        output = ""
 
         output = self.aflow_command([
-            command
-            + " --catalog=anrl --quiet --print=json"
-            + " < "
-            + self.aflow_work_dir
-            + input_file
+            
+            " --prim < " + self.aflow_work_dir + input_file,
+            " --compare2prototypes --catalog=anrl --quiet --print=json"
         ])
         res_json = json.loads(output)
         return res_json
