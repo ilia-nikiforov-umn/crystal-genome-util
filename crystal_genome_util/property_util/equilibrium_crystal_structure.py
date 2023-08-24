@@ -473,7 +473,7 @@ def find_unique_materials_and_write_properties(compare_dir: str, prototype_label
         compare_dir:
             Directory of structures to compare. This should contain filenames that are just integers corresponding to indices
         prototype_label:
-            Prototype label of structures. This must be unchanged for property to write.
+            Prototype label of structures. If an empty string is given, this is not checked. If this is nonempty, the relaxed structures must match this for the property to write.
         energy_per_atom:
             List of relaxed energies per atom corresponding to the relaxed structures
         species:
@@ -499,13 +499,14 @@ def find_unique_materials_and_write_properties(compare_dir: str, prototype_label
         for i in indices:
             relax_poscar_path=os.path.join(compare_dir,str(i))
             relax_proto_des=aflow.get_prototype(relax_poscar_path)
-            relax_proto_label=relax_proto_des['aflow_prototype_label']
-            if relax_proto_label != prototype_label:
-                print("Prototype label changed during relaxation: test template prototype is %s, while relaxed is %s. Skipping parameter set %d."
-                %(prototype_label,relax_proto_label,i))
-                if i==indices[-1]:
-                    print("No parameter sets in this group successfully added a property instance. Skipping this group.")
-                continue
+            if prototype_label != "":
+                relax_proto_label=relax_proto_des['aflow_prototype_label']
+                if relax_proto_label != prototype_label:
+                    print("Prototype label changed during relaxation: test template prototype is %s, while relaxed is %s. Skipping parameter set %d."
+                    %(prototype_label,relax_proto_label,i))
+                    if i==indices[-1]:
+                        print("No parameter sets in this group successfully added a property instance. Skipping this group.")
+                    continue
             (libproto,shortname)=aflow.get_library_prototype_label_and_shortname(relax_poscar_path,shortnames)
             # Try to add property instances. Back up original so we can keep going even if one parameter set fails
             property_inst_new = property_inst # these are just serialized edn strings, so no need for deepcopy or anything
