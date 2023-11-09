@@ -16,4 +16,5 @@ setuptools.setup(
     license="LGPL",
     install_requires=["numpy >= 1.13.1", "ase >= 3.19.0b1", "spglib >= 2.1.0", "kim-edn >= 1.3.1", "kim-property >= 2.5.7"],
     python_requires=">=3.8",
+    include_package_data=True
 )
