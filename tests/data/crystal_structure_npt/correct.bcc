@@ -1,0 +1,88 @@
+[
+    {
+        "property-id" "tag:staff@noreply.openkim.org,2023-02-21:property/binding-energy-crystal" 
+        "instance-id" 1 
+        "prototype-label" {
+            "source-value" "A_cI2_229_a"
+        } 
+        "stoichiometric-species" {
+            "source-value" [
+                "Fe"
+            ]
+        } 
+        "a" {
+            "source-value" 2.8553 
+            "source-unit" "angstrom" 
+            "si-unit" "m" 
+            "si-value" 2.8553e-10
+        } 
+        "binding-potential-energy-per-atom" {
+            "source-value" -4.122397883653566 
+            "source-unit" "eV" 
+            "si-unit" "kg m^2 / s^2" 
+            "si-value" -6.604809565240793e-19
+        } 
+        "binding-potential-energy-per-formula" {
+            "source-value" -4.122397883653566 
+            "source-unit" "eV" 
+            "si-unit" "kg m^2 / s^2" 
+            "si-value" -6.604809565240793e-19
+        } 
+        "library-prototype-label" {
+            "source-value" "A_cI2_229_a"
+        } 
+        "short-name" {
+            "source-value" "Body-Centered Cubic"
+        }
+    } 
+    {
+        "property-id" "tag:staff@noreply.openkim.org,2023-02-21:property/crystal-structure-npt" 
+        "instance-id" 2 
+        "prototype-label" {
+            "source-value" "A_cI2_229_a"
+        } 
+        "stoichiometric-species" {
+            "source-value" [
+                "Fe"
+            ]
+        } 
+        "a" {
+            "source-value" 2.8553 
+            "source-unit" "angstrom" 
+            "si-unit" "m" 
+            "si-value" 2.8553e-10
+        } 
+        "cell-cauchy-stress" {
+            "source-value" [
+                0.0 
+                0.0 
+                0.0 
+                0.0 
+                0.0 
+                0.0
+            ] 
+            "source-unit" "eV/angstrom^3" 
+            "si-unit" "kg / m s^2" 
+            "si-value" [
+                0.0 
+                0.0 
+                0.0 
+                0.0 
+                0.0 
+                0.0
+            ]
+        } 
+        "temperature" {
+            "source-value" 0.0 
+            "source-unit" "K" 
+            "si-unit" "K" 
+            "si-value" 0.0
+        } 
+        "library-prototype-label" {
+            "source-value" "A_cI2_229_a"
+        } 
+        "short-name" {
+            "source-value" "Body-Centered Cubic"
+        }
+    }
+]

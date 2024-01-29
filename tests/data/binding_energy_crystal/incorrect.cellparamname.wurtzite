@@ -1,0 +1,118 @@
+[
+    {
+        "property-id" "tag:staff@noreply.openkim.org,2023-02-21:property/binding-energy-crystal" 
+        "instance-id" 1 
+        "prototype-label" {
+            "source-value" "AB_hP4_186_b_b"
+        } 
+        "stoichiometric-species" {
+            "source-value" [
+                "S" 
+                "Zn"
+            ]
+        } 
+        "a" {
+            "source-value" 3.8226 
+            "source-unit" "angstrom" 
+            "si-unit" "m" 
+            "si-value" 3.8226e-10
+        } 
+        "binding-potential-energy-per-atom" {
+            "source-value" -3.080004130545873 
+            "source-unit" "eV" 
+            "si-unit" "kg m^2 / s^2" 
+            "si-value" -4.934710650584083e-19
+        } 
+        "binding-potential-energy-per-formula" {
+            "source-value" -6.160008261091746 
+            "source-unit" "eV" 
+            "si-unit" "kg m^2 / s^2" 
+            "si-value" -9.869421301168166e-19
+        } 
+        "parameter-names" {
+            "source-value" [
+                "incorrect" 
+                "z1" 
+                "z2"
+            ]
+        } 
+        "parameter-values" {
+            "source-value" [
+                1.6329985 
+                0.3745 
+                0.9995
+            ]
+        } 
+        "library-prototype-label" {
+            "source-value" "AB_hP4_186_b_b-001"
+        } 
+        "short-name" {
+            "source-value" "Wurtzite"
+        }
+    } 
+    {
+        "property-id" "tag:staff@noreply.openkim.org,2023-02-21:property/crystal-structure-npt" 
+        "instance-id" 2 
+        "prototype-label" {
+            "source-value" "AB_hP4_186_b_b"
+        } 
+        "stoichiometric-species" {
+            "source-value" [
+                "S" 
+                "Zn"
+            ]
+        } 
+        "a" {
+            "source-value" 3.8226 
+            "source-unit" "angstrom" 
+            "si-unit" "m" 
+            "si-value" 3.8226e-10
+        } 
+        "cell-cauchy-stress" {
+            "source-value" [
+                0.0 
+                0.0 
+                0.0 
+                0.0 
+                0.0 
+                0.0
+            ] 
+            "source-unit" "eV/angstrom^3" 
+            "si-unit" "kg / m s^2" 
+            "si-value" [
+                0.0 
+                0.0 
+                0.0 
+                0.0 
+                0.0 
+                0.0
+            ]
+        } 
+        "temperature" {
+            "source-value" 0.0 
+            "source-unit" "K" 
+            "si-unit" "K" 
+            "si-value" 0.0
+        } 
+        "parameter-names" {
+            "source-value" [
+                "c/a" 
+                "z1" 
+                "z2"
+            ]
+        } 
+        "parameter-values" {
+            "source-value" [
+                1.6329985 
+                0.3745 
+                0.9995
+            ]
+        } 
+        "library-prototype-label" {
+            "source-value" "AB_hP4_186_b_b-001"
+        } 
+        "short-name" {
+            "source-value" "Wurtzite"
+        }
+    }
+]
