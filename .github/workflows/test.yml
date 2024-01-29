@@ -8,11 +8,16 @@ jobs:
       runs-on: ubuntu-latest
       container:
         image: ghcr.io/openkim/developer-platform:latest-minimal
-        volumes:
-          - tests:/home/openkim/tests
+        options: --user root
+      defaults:
+        run: 
+            shell: bash
       steps:
+        - name: Checkout repository
+          uses: actions/checkout@v2
+
         - name: Test EquilibriumCrystalStructure property validation
           run: |
-             pip install pytest
-             cd tests
-             pytest
+            cd tests
+            pip install pytest
+            pytest -rA
