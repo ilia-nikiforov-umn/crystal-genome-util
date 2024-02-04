@@ -5,10 +5,7 @@ Functions for writing and validating common fields of Crystal Genome properties
 from kim_property import kim_property_modify
 from typing import Dict, List, Union
 import numpy as np
-import kim_edn
-from ..aflow_util import get_stoich_reduced_list_from_prototype, AFLOW, read_shortnames
-import os
-from kim_property import kim_property_dump
+from ..aflow_util import AFLOW
 from curses.ascii import isdigit
 import subprocess
 

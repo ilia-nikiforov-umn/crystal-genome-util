@@ -137,8 +137,8 @@ def add_property_inst(
     )
 
     # Add structure (all fields shared with any other NPT property)
-    property_instances = add_common_fields(property_instances,energy_index,stoichiometric_species,proto_des,libproto,shortname,np.zeros(6),"eV/angstrom^3",0.)
-    
+    property_instances = add_common_fields(property_instances,structure_index,stoichiometric_species,proto_des,libproto,shortname,np.zeros(6),"eV/angstrom^3",0.)
+
     return property_instances
 
 def find_unique_materials_and_write_properties(compare_dir: str, prototype_label: str, energy_per_atom: List[float], species):
