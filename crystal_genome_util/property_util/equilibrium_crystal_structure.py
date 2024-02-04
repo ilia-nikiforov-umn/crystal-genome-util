@@ -7,7 +7,7 @@ from typing import Dict, List, Union
 import numpy as np
 import kim_edn
 from ..aflow_util import get_stoich_reduced_list_from_prototype, AFLOW, read_shortnames
-from .common_fields import validate_common_fields, convert_units
+from .common_fields import validate_common_fields, add_common_fields, convert_units
 import os
 from kim_property import kim_property_dump
 
@@ -67,7 +67,7 @@ def validate_crystal_structure_npt(property_instances: str, structure_property_i
             validate_common_fields(property_instance)
 
 def add_property_inst(
-    energy_atom:float,stoichiometric_species:List[str],proto_des: Dict, libproto: str, shortname: str, property_instances: Union[str,None] = None
+    energy_atom:float,stoichiometric_species:List[str],proto_des: Dict, libproto: Union[str,None], shortname: Union[str,None], property_instances: Union[str,None] = None
 ) -> str:
     """
     Add a pair of property instances to the property_instances object.
@@ -113,28 +113,13 @@ def add_property_inst(
         STRUCTURE_PROPERTY_ID,property_instances
     )    
 
-    # Set all required key-value pairs for energy
+    # Add common fields for energy
+    property_instances = add_common_fields(property_instances,energy_index,stoichiometric_species,proto_des,libproto,shortname)
+
+    # Add energies
     property_instances = kim_property_modify(
         property_instances,
         energy_index,
-        #
-        "key",
-        "prototype-label",
-        "source-value",
-        prototype_label,
-        #
-        "key",
-        "stoichiometric-species",
-        "source-value",
-        "1:{}".format(len(stoichiometric_species)),
-        *stoichiometric_species,
-        #
-        "key",
-        "a",
-        "source-value",
-        a,
-        "source-unit",
-        "angstrom",
         #
         "key",
         "binding-potential-energy-per-atom",
@@ -151,89 +136,8 @@ def add_property_inst(
         "eV",
     )
 
-    # Set all required key-value pairs for structure
-    property_instances = kim_property_modify(
-        property_instances,
-        structure_index,
-        #
-        "key",
-        "prototype-label",
-        "source-value",
-        prototype_label,
-        #
-        "key",
-        "stoichiometric-species",
-        "source-value",
-        "1:{}".format(len(stoichiometric_species)),
-        *stoichiometric_species,
-        #
-        "key",
-        "a",
-        "source-value",
-        a,
-        "source-unit",
-        "angstrom",
-        #
-        "key",
-        "cell-cauchy-stress",
-        "source-value",
-        "1:6",
-        *np.zeros(6),
-        "source-unit",
-        "eV/angstrom^3",
-        #
-        "key",
-        "temperature",
-        "source-value",
-        0.,
-        "source-unit",
-        "K",
-    )
-
-    # write non-a parameters if present
-    if len(proto_des["aflow_prototype_params_values"])>1:
-        parameter_names=proto_des["aflow_prototype_params_list"][1:]
-        parameter_values=proto_des["aflow_prototype_params_values"][1:]
-        for index in (energy_index,structure_index):
-            property_instances = kim_property_modify(
-                property_instances,
-                index,
-                "key",
-                "parameter-names",
-                "source-value",
-                "1:{}".format(len(parameter_names)),
-                *parameter_names,
-                #
-                "key",
-                "parameter-values",
-                "source-value",
-                "1:{}".format(len(parameter_values)),
-                *parameter_values,
-            )
-
-    if libproto is not None:
-        for index in (energy_index,structure_index):        
-            property_instances = kim_property_modify(
-                property_instances,
-                index,                         
-                #   
-                "key",
-                "library-prototype-label",
-                "source-value",
-                libproto
-            )
-
-    if shortname is not None:
-        for index in (energy_index,structure_index):        
-            property_instances = kim_property_modify(
-                property_instances,
-                index,                         
-                #   
-                "key",
-                "short-name",
-                "source-value",
-                shortname
-            )                            
+    # Add structure (all fields shared with any other NPT property)
+    property_instances = add_common_fields(property_instances,energy_index,stoichiometric_species,proto_des,libproto,shortname,np.zeros(6),"eV/angstrom^3",0.)
     
     return property_instances
 
