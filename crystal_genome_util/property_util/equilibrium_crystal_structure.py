@@ -93,7 +93,6 @@ def add_property_inst(
     
     # figure out required values
     prototype_label = proto_des["aflow_prototype_label"]
-    a = proto_des["aflow_prototype_params_values"][0]
     n_formula = sum(get_stoich_reduced_list_from_prototype(prototype_label))
 
     # create energy property    
