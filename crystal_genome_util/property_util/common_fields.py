@@ -347,4 +347,6 @@ def add_common_fields(property_instances: str, property_index: int, stoichiometr
             temperature,
             "source-unit",
             "K",
-        )                 
+        )
+
+    return property_instances
