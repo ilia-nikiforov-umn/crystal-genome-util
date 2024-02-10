@@ -225,7 +225,7 @@ def find_unique_materials_and_write_properties(compare_dir: str, prototype_label
             # Try to add property instances. Back up original so we can keep going even if one parameter set fails
             property_inst_new = property_inst # these are just serialized edn strings, so no need for deepcopy or anything
             try:
-                property_inst_new = add_property_inst(energy_per_atom[i],species,relax_proto_des,libproto,shortname,property_inst_new)
+                property_inst_new = add_property_inst(energy_per_atom[i],species,relax_proto_des,libproto,shortname,property_inst_new,relax_poscar_path)
                 validate_crystal_structure_npt(property_inst_new,STRUCTURE_PROPERTY_ID)
                 validate_binding_energy_crystal(property_inst_new,ENERGY_PROPERTY_ID)
                 property_inst = property_inst_new
