@@ -9,6 +9,7 @@ import kim_edn
 from ..aflow_util import get_stoich_reduced_list_from_prototype, AFLOW, read_shortnames
 from .common_fields import validate_common_fields, add_common_fields, convert_units
 import os
+import shutil
 from kim_property import kim_property_dump
 
 ENERGY_PROPERTY_ID = "tag:staff@noreply.openkim.org,2023-02-21:property/binding-energy-crystal"
@@ -67,8 +68,8 @@ def validate_crystal_structure_npt(property_instances: str, structure_property_i
             validate_common_fields(property_instance)
 
 def add_property_inst(
-    energy_atom:float,stoichiometric_species:List[str],proto_des: Dict, libproto: Union[str,None], shortname: Union[str,None], property_instances: Union[str,None] = None
-) -> str:
+    energy_atom:float,stoichiometric_species:List[str],proto_des: Dict, libproto: Union[str,None], 
+    shortname: Union[str,None], property_instances: Union[str,None] = None, file_name: Union[str,None] = None) -> str:
     """
     Add a pair of property instances to the property_instances object.
 
@@ -87,6 +88,8 @@ def add_property_inst(
             Material shortname
         property_instances:
             Existing property_instances object, if any
+        file_name:
+            Path to the file where this structure came from, to be copied to output
     Returns:        
         Updated property_instances object
     """
@@ -135,8 +138,35 @@ def add_property_inst(
         "eV",
     )
 
-    # Add structure (all fields shared with any other NPT property)
+    # Add common fields for structure
     property_instances = add_common_fields(property_instances,structure_index,stoichiometric_species,proto_des,libproto,shortname,np.zeros(6),"eV/angstrom^3",0.)
+
+    # Add files if given
+    if file_name is not None:
+        energy_poscar="instance-"+str(energy_index)+".poscar"
+        structure_poscar="instance-"+str(structure_index)+".poscar"
+        shutil.copy(file_name,"output/"+energy_poscar)
+        shutil.copy(file_name,"output/"+structure_poscar)
+
+        property_instances = kim_property_modify(
+            property_instances,
+            energy_index,
+            #
+            "key",
+            "coordinates-file",
+            "source-value",
+            energy_poscar,
+        )
+        property_instances = kim_property_modify(
+            property_instances,
+            structure_index,
+            #
+            "key",
+            "coordinates-file",
+            "source-value",
+            structure_poscar,
+        )    
+
 
     return property_instances
 
