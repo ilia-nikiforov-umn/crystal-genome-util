@@ -319,6 +319,7 @@ def add_common_fields(property_instances: str, property_index: int, stoichiometr
             "key",
             "short-name",
             "source-value",
+            "1:1",
             shortname
         )                            
 
