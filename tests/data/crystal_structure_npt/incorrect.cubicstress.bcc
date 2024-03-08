@@ -32,7 +32,7 @@
             "source-value" "A_cI2_229_a"
         } 
         "short-name" {
-            "source-value" "Body-Centered Cubic"
+            "source-value" ["Body-Centered Cubic"]
         }
     } 
     {
@@ -82,7 +82,7 @@
             "source-value" "A_cI2_229_a"
         } 
         "short-name" {
-            "source-value" "Body-Centered Cubic"
+            "source-value" ["Body-Centered Cubic"]
         }
     }
 ]

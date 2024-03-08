@@ -7,8 +7,9 @@ from typing import Dict, List, Union
 import numpy as np
 import kim_edn
 from ..aflow_util import get_stoich_reduced_list_from_prototype, AFLOW, read_shortnames
-from .common_fields import validate_common_fields, convert_units
+from .common_fields import validate_common_fields, add_common_fields, convert_units
 import os
+import shutil
 from kim_property import kim_property_dump
 
 ENERGY_PROPERTY_ID = "tag:staff@noreply.openkim.org,2023-02-21:property/binding-energy-crystal"
@@ -67,8 +68,8 @@ def validate_crystal_structure_npt(property_instances: str, structure_property_i
             validate_common_fields(property_instance)
 
 def add_property_inst(
-    energy_atom:float,stoichiometric_species:List[str],proto_des: Dict, libproto: str, shortname: str, property_instances: Union[str,None] = None
-) -> str:
+    energy_atom:float,stoichiometric_species:List[str],proto_des: Dict, libproto: Union[str,None], 
+    shortname: Union[str,None], property_instances: Union[str,None] = None, file_name: Union[str,None] = None) -> str:
     """
     Add a pair of property instances to the property_instances object.
 
@@ -87,13 +88,14 @@ def add_property_inst(
             Material shortname
         property_instances:
             Existing property_instances object, if any
+        file_name:
+            Path to the file where this structure came from, to be copied to output
     Returns:        
         Updated property_instances object
     """
     
     # figure out required values
     prototype_label = proto_des["aflow_prototype_label"]
-    a = proto_des["aflow_prototype_params_values"][0]
     n_formula = sum(get_stoich_reduced_list_from_prototype(prototype_label))
 
     # create energy property    
@@ -113,28 +115,13 @@ def add_property_inst(
         STRUCTURE_PROPERTY_ID,property_instances
     )    
 
-    # Set all required key-value pairs for energy
+    # Add common fields for energy
+    property_instances = add_common_fields(property_instances,energy_index,stoichiometric_species,proto_des,libproto,shortname)
+
+    # Add energies
     property_instances = kim_property_modify(
         property_instances,
         energy_index,
-        #
-        "key",
-        "prototype-label",
-        "source-value",
-        prototype_label,
-        #
-        "key",
-        "stoichiometric-species",
-        "source-value",
-        "1:{}".format(len(stoichiometric_species)),
-        *stoichiometric_species,
-        #
-        "key",
-        "a",
-        "source-value",
-        a,
-        "source-unit",
-        "angstrom",
         #
         "key",
         "binding-potential-energy-per-atom",
@@ -151,90 +138,36 @@ def add_property_inst(
         "eV",
     )
 
-    # Set all required key-value pairs for structure
-    property_instances = kim_property_modify(
-        property_instances,
-        structure_index,
-        #
-        "key",
-        "prototype-label",
-        "source-value",
-        prototype_label,
-        #
-        "key",
-        "stoichiometric-species",
-        "source-value",
-        "1:{}".format(len(stoichiometric_species)),
-        *stoichiometric_species,
-        #
-        "key",
-        "a",
-        "source-value",
-        a,
-        "source-unit",
-        "angstrom",
-        #
-        "key",
-        "cell-cauchy-stress",
-        "source-value",
-        "1:6",
-        *np.zeros(6),
-        "source-unit",
-        "eV/angstrom^3",
-        #
-        "key",
-        "temperature",
-        "source-value",
-        0.,
-        "source-unit",
-        "K",
-    )
+    # Add common fields for structure
+    property_instances = add_common_fields(property_instances,structure_index,stoichiometric_species,proto_des,libproto,shortname,np.zeros(6),"eV/angstrom^3",0.)
 
-    # write non-a parameters if present
-    if len(proto_des["aflow_prototype_params_values"])>1:
-        parameter_names=proto_des["aflow_prototype_params_list"][1:]
-        parameter_values=proto_des["aflow_prototype_params_values"][1:]
-        for index in (energy_index,structure_index):
-            property_instances = kim_property_modify(
-                property_instances,
-                index,
-                "key",
-                "parameter-names",
-                "source-value",
-                "1:{}".format(len(parameter_names)),
-                *parameter_names,
-                #
-                "key",
-                "parameter-values",
-                "source-value",
-                "1:{}".format(len(parameter_values)),
-                *parameter_values,
-            )
+    # Add files if given
+    if file_name is not None:
+        energy_poscar="instance-"+str(energy_index)+".poscar"
+        structure_poscar="instance-"+str(structure_index)+".poscar"
+        shutil.copy(file_name,"output/"+energy_poscar)
+        shutil.copy(file_name,"output/"+structure_poscar)
 
-    if libproto is not None:
-        for index in (energy_index,structure_index):        
-            property_instances = kim_property_modify(
-                property_instances,
-                index,                         
-                #   
-                "key",
-                "library-prototype-label",
-                "source-value",
-                libproto
-            )
+        property_instances = kim_property_modify(
+            property_instances,
+            energy_index,
+            #
+            "key",
+            "coordinates-file",
+            "source-value",
+            energy_poscar,
+        )
+        property_instances = kim_property_modify(
+            property_instances,
+            structure_index,
+            #
+            "key",
+            "coordinates-file",
+            "source-value",
+            structure_poscar,
+        )    
 
-    if shortname is not None:
-        for index in (energy_index,structure_index):        
-            property_instances = kim_property_modify(
-                property_instances,
-                index,                         
-                #   
-                "key",
-                "short-name",
-                "source-value",
-                shortname
-            )                            
-    
+
     return property_instances
 
 def find_unique_materials_and_write_properties(compare_dir: str, prototype_label: str, energy_per_atom: List[float], species):
@@ -292,7 +225,7 @@ def find_unique_materials_and_write_properties(compare_dir: str, prototype_label
             # Try to add property instances. Back up original so we can keep going even if one parameter set fails
             property_inst_new = property_inst # these are just serialized edn strings, so no need for deepcopy or anything
             try:
-                property_inst_new = add_property_inst(energy_per_atom[i],species,relax_proto_des,libproto,shortname,property_inst_new)
+                property_inst_new = add_property_inst(energy_per_atom[i],species,relax_proto_des,libproto,shortname,property_inst_new,relax_poscar_path)
                 validate_crystal_structure_npt(property_inst_new,STRUCTURE_PROPERTY_ID)
                 validate_binding_energy_crystal(property_inst_new,ENERGY_PROPERTY_ID)
                 property_inst = property_inst_new

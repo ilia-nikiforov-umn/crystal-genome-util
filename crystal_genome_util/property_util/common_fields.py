@@ -2,13 +2,10 @@
 Functions for writing and validating common fields of Crystal Genome properties
 """
 
-from kim_property import kim_property_create, kim_property_modify
+from kim_property import kim_property_modify
 from typing import Dict, List, Union
 import numpy as np
-import kim_edn
-from ..aflow_util import get_stoich_reduced_list_from_prototype, AFLOW, read_shortnames
-import os
-from kim_property import kim_property_dump
+from ..aflow_util import AFLOW
 from curses.ascii import isdigit
 import subprocess
 
@@ -235,3 +232,122 @@ def validate_common_fields(property_inst: Dict):
                         "Stress component xy %f is nonzero. This is incompatible with a crystal prototype lacking parameter gamma"%
                         stress["xy"]
                         )                                                        
+
+def add_common_fields(property_instances: str, property_index: int, stoichiometric_species:List[str], proto_des: Dict, libproto: str, shortname: str, 
+                      stress: Union[np.ndarray,None] = None, stress_unit: Union[str,None] = None, temperature: Union[float,None] = None) -> str:
+    """
+    Add common crystal-genome fields to an initialized property
+
+    Args:
+        property_instances: Serialized kim-edn property instances object
+        property_index: index of the property we are writing to in the instances object
+        stoichiometric_species:
+            Element symbols corresponding to the atom types in the stoichiometric formula which appears at the start of the prototype label (e.g. ['Mo','S'] for the AB2 stoichiometric formula, 
+            means that the 'A' atom is 'Mo' and the 'B' atom is 'S' for the MoS_2 structure).
+        proto_des: AFLOW prototype designation from crystal_genome_util.aflow_util.AFLOW.get_prototype
+        libproto: AFLOW library prototype
+        shortname: Material shortname
+        stress: Cauchy stress
+        stress_unit: unit of stress
+        temperature: temperature in K
+    Returns:
+        Updated property_instances object
+    """
+    
+    prototype_label = proto_des["aflow_prototype_label"]
+    a = proto_des["aflow_prototype_params_values"][0]
+    
+    property_instances = kim_property_modify(
+        property_instances,
+        property_index,
+        #
+        "key",
+        "prototype-label",
+        "source-value",
+        prototype_label,
+        #
+        "key",
+        "stoichiometric-species",
+        "source-value",
+        "1:{}".format(len(stoichiometric_species)),
+        *stoichiometric_species,
+        #
+        "key",
+        "a",
+        "source-value",
+        a,
+        "source-unit",
+        "angstrom",
+    )
+
+    # write non-a parameters if present
+    if len(proto_des["aflow_prototype_params_values"])>1:
+        parameter_names=proto_des["aflow_prototype_params_list"][1:]
+        parameter_values=proto_des["aflow_prototype_params_values"][1:]
+        property_instances = kim_property_modify(
+            property_instances,
+            property_index,
+            "key",
+            "parameter-names",
+            "source-value",
+            "1:{}".format(len(parameter_names)),
+            *parameter_names,
+            #
+            "key",
+            "parameter-values",
+            "source-value",
+            "1:{}".format(len(parameter_values)),
+            *parameter_values,
+        )
+
+    if libproto is not None:
+        property_instances = kim_property_modify(
+            property_instances,
+            property_index,                         
+            #   
+            "key",
+            "library-prototype-label",
+            "source-value",
+            libproto
+        )
+
+    if shortname is not None:
+        property_instances = kim_property_modify(
+            property_instances,
+            property_index,                         
+            #   
+            "key",
+            "short-name",
+            "source-value",
+            "1:1",
+            shortname
+        )                            
+
+    if stress is not None:
+        property_instances = kim_property_modify(
+            property_instances,
+            property_index,             
+            #
+            "key",
+            "cell-cauchy-stress",
+            "source-value",
+            "1:6",
+            *stress,
+            "source-unit",
+            stress_unit,
+        )                            
+
+    if temperature is not None:
+        property_instances = kim_property_modify(
+            property_instances,
+            property_index,                         
+            #
+            "key",
+            "temperature",
+            "source-value",
+            temperature,
+            "source-unit",
+            "K",
+        )
+
+    return property_instances
