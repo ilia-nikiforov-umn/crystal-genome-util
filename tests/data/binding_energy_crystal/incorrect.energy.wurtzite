@@ -47,7 +47,7 @@
             "source-value" "AB_hP4_186_b_b-001"
         } 
         "short-name" {
-            "source-value" "Wurtzite"
+            "source-value" ["Wurtzite"]
         }
     } 
     {
@@ -112,7 +112,7 @@
             "source-value" "AB_hP4_186_b_b-001"
         } 
         "short-name" {
-            "source-value" "Wurtzite"
+            "source-value" ["Wurtzite"]
         }
     }
 ]
